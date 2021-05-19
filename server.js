@@ -75,4 +75,54 @@ app.get('/islogged', (request, response) =>{
         response.status(200).json({email: user.email, nom: user.nom, prenom:user.prenom, grade:user.grade});
     })
 })
+
+//**************************Partie Produit***************************** */
+let produits= [];
+var product1 = {id : 0, libelle : "PommeServeur", categorie : "FruitServeur", description : "Mon premier produit", provenance : "sFrance", prix : '150', urlImage : "assets/img/product1.jpg", quantity :'10' }
+var product2 = {id : 1, libelle: "Pomme2Serveur", categorie : "FruitServeur", description : "Mon second produit", provenance : "Italie", prix : 15, urlImage : "assets/img/product1.jpg", quantity :0 }
+produits.push(product1);
+produits.push(product2);
+
+app.get('/products', (request, response) =>{
+   response.json({data : produits})
+}) 
+app.get('/products/:id', (request, response) =>{
+    id = request.params.id;
+    var index;
+    for(var i in produits) {
+      if (produits[i].id == id)
+        index = i; }
+    response.json({data : produits[index]})
+ }) 
+ app.delete('/products/:id', (request, response) =>{
+    id = request.params.id;
+    var index;
+    for(var i in produits) {
+      if (produits[i].id == id)
+        index = i; }
+        produits.splice(index,1);
+        response.json({data:'DELETE notes:id entry'})
+ }) 
+ app.put('/products/:id', (request, response)=>{
+
+     let newProduct = request.body;
+    id = request.params.id;
+    var index;
+    for(var i in produits) {
+      if (produits[i].id == id)
+        index = i; }
+    produits[index]= newProduct;
+    response.json({data : produits[index]})
+
+
+ })
+ app.post('/products', (request, response)=>{
+
+    let newProduct = request.body;
+    produits.push(newProduct);
+
+
+})
+
+
 app.listen(3000, ()=>{console.log("Listening on port 3000")});
