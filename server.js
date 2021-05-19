@@ -1,11 +1,10 @@
 const express = require('express');
 const session = require('express-session')
 const app = express();
-var cors = require('core');
+var cors = require('cors');
 var bodyParser = require("body-parser");
 const User = require("./models/user");
 const mongoose = require("mongoose");
-const { response, request } = require('express');
 
 mongoose.connect("mongodb+srv://alim:alim@cluster0.ussbb.mongodb.net/Court-Circuit?retryWrites=true&w=majority", {useNewUrlParser: true, useUnifiedTopology: true})
     .then(() =>{
@@ -15,16 +14,16 @@ mongoose.connect("mongodb+srv://alim:alim@cluster0.ussbb.mongodb.net/Court-Circu
         console.log("Unable to connect to DB");
         console.error(error);
     });
-app.use(cors({credential: true, origin: 'http://localhost:4200'}));
-app.use((req, res, next)=>{
-    res.set("Access-Control-Allow-Origin", "*");
+app.use(cors({credentials: true, origin: 'http://localhost:4200'}));
+/* app.use((req, res, next)=>{
+    res.set("Access-Control-Allow-Origin", "http://localhost:4200");
     res.set("Access-Control-Allow-Methods", "PUT, POST, GET, DELETE, OPTIONS, PATCH");
     res.set("Access-Control-Allow-Headers", "X-Requested-With, content-type");
     res.set("Access-Control-Allow-Credentials", true);
     next();
-})
-app.use(bodyParser.urlencoded({extended:true}));
-app.use(bodyParser.json());
+}) */
+app.use(express.urlencoded({extended:true}));
+app.use(express.json());
 app.use(session({secret:"CourtCircuitKey", cookie:{maxAge: 24*60*60*1000}}));
 
 app.post('/login', (request, response) => {
@@ -32,7 +31,7 @@ app.post('/login', (request, response) => {
         if (error) return response.status(401).json({msg:"Error"});
         if(!user) return response.status(401).json({msg: "Mauvais email/password"});
         request.session.userId = user._id;
-        response.status(200).json({email: user.email, nom: user.nom, prenom: user.prenom, grade: user.grade});
+        return response.status(200).json({email: user.email, nom: user.nom, prenom: user.prenom, grade: user.grade});
     })
 })
 
@@ -50,9 +49,9 @@ app.post('/register', (request, response) =>{
             return response.status(409).json({msg:"L'utilisateur existe déjà"});
         }else{
             newUser.save((error, user) =>{
-                if(error) return console.error(err);
+                if(error) return console.error(error);
                 request.session.userId = user._id;
-                response.status(200).json({email: user.email, nom: user.nom, prenom: user.prenom, grade: user.grade});
+                return response.status(200).json({email: user.email, nom: user.nom, prenom: user.prenom, grade: user.grade});
             })
         }
     })
