@@ -77,8 +77,8 @@ app.get('/islogged', (request, response) =>{
 
 //**************************Partie Produit***************************** */
 let produits= [];
-var product1 = {id : 0, libelle : "PommeServeur", categorie : "FruitServeur", description : "Mon premier produit", provenance : "sFrance", prix : '150', urlImage : "assets/img/product1.jpg", quantity :'10' }
-var product2 = {id : 1, libelle: "Pomme2Serveur", categorie : "FruitServeur", description : "Mon second produit", provenance : "Italie", prix : 15, urlImage : "assets/img/product1.jpg", quantity :0 }
+var product1 = {id : 0, libelle : "PommeServeur", categorie : "Fruit", description : "Mon premier produit", provenance : "sFrance", prix : '150', urlImage : "assets/img/product1.jpg", quantity :'10' }
+var product2 = {id : 1, libelle: "Pomme2Serveur", categorie : "Fruit", description : "Mon second produit", provenance : "Italie", prix : 15, urlImage : "assets/img/product1.jpg", quantity :0 }
 produits.push(product1);
 produits.push(product2);
 
@@ -103,7 +103,6 @@ app.get('/products/:id', (request, response) =>{
         response.json({data:'DELETE notes:id entry'})
  }) 
  app.put('/products/:id', (request, response)=>{
-
      let newProduct = request.body;
     id = request.params.id;
     var index;
