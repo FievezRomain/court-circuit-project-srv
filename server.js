@@ -4,6 +4,7 @@ const app = express();
 var cors = require('cors');
 var bodyParser = require("body-parser");
 const User = require("./models/user");
+const Product = require("./models/product");
 const mongoose = require("mongoose");
 
 mongoose.connect("mongodb+srv://alim:alim@cluster0.ussbb.mongodb.net/Court-Circuit?retryWrites=true&w=majority", {useNewUrlParser: true, useUnifiedTopology: true})
@@ -26,6 +27,8 @@ app.use(express.urlencoded({extended:true}));
 app.use(express.json());
 app.use(session({secret:"CourtCircuitKey", cookie:{maxAge: 24*60*60*1000}}));
 
+
+//**************************Partie Auth***************************** */
 app.post('/login', (request, response) => {
     User.findOne({email: request.body.email, password: request.body.password}, (error, user) => {
         if (error) return response.status(401).json({msg:"Error"});
@@ -75,52 +78,122 @@ app.get('/islogged', (request, response) =>{
     })
 })
 
-//**************************Partie Produit***************************** */
-let produits= [];
-var product1 = {id : 0, libelle : "PommeServeur", categorie : "Fruit", description : "Mon premier produit", provenance : "sFrance", prix : '150', urlImage : "assets/img/product1.jpg", quantity :'10' }
-var product2 = {id : 1, libelle: "Pomme2Serveur", categorie : "Fruit", description : "Mon second produit", provenance : "Italie", prix : 15, urlImage : "assets/img/product1.jpg", quantity :0 }
-produits.push(product1);
-produits.push(product2);
+app.get('/users', (request, response) =>{
+    User.find((error, users)=>{
+        if(error){
+            console.error(error);
+        }
+        console.log(users);
+        response.json(users);
+    });
+}) 
+app.get('/users/:id', (request, response) =>{
+    User.findOne({_id: request.params.id},(error, user)=>{
+        if(error){
+            console.error(error);
+        }
+        console.log(user);
+        response.json(user);
+    });
+ }) 
+ app.delete('/users/:id', (request, response) =>{
+    User.deleteOne({_id: request.params.id}, (error)=>{
+        if(error){
+            console.error(error);
+        }
+        console.log({msg: "delete success"});
+        response.status(201).json({msg: "delete success"});
+    })
+ }) 
+ app.put('/users/:id', (request, response)=>{
+    let user = request.body;
+    var updateUser = new User({
+        _id: user._id,
+        email: user.email,
+        nom: user.nom,
+        prenom: user.prenom,
+        grade: user.grade,
+        password: user.password
+    })
 
+    User.updateOne({_id: user._id}, updateUser, (error, user)=>{
+        if(error){
+            console.error(error);
+        }
+        console.log(user);
+        response.json(user);
+    })
+
+ })
+
+//**************************Partie Produit***************************** */
 app.get('/products', (request, response) =>{
-   response.json({data : produits})
+    Product.find((error, products)=>{
+        if(error){
+            console.error(error);
+        }
+        console.log(products);
+        response.json(products);
+    });
 }) 
 app.get('/products/:id', (request, response) =>{
-    id = request.params.id;
-    var index;
-    for(var i in produits) {
-      if (produits[i].id == id)
-        index = i; }
-    response.json({data : produits[index]})
+    Product.findOne({_id: request.params.id},(error, product)=>{
+        if(error){
+            console.error(error);
+        }
+        console.log(product);
+        response.json(product);
+    });
  }) 
  app.delete('/products/:id', (request, response) =>{
-    id = request.params.id;
-    var index;
-    for(var i in produits) {
-      if (produits[i].id == id)
-        index = i; }
-        produits.splice(index,1);
-        response.json({data:'DELETE notes:id entry'})
+    Product.deleteOne({_id: request.params.id}, (error)=>{
+        if(error){
+            console.error(error);
+        }
+        console.log({msg: "delete success"});
+        response.status(201).json({msg: "delete success"});
+    })
  }) 
  app.put('/products/:id', (request, response)=>{
-     let newProduct = request.body;
-    id = request.params.id;
-    var index;
-    for(var i in produits) {
-      if (produits[i].id == id)
-        index = i; }
-    produits[index]= newProduct;
-    response.json({data : produits[index]})
+    let product = request.body;
+    let updateProduct = new Product({
+        _id: product._id,
+        libelle: product.libelle,
+        categorie: product.categorie,
+        description: product.description,
+        provenance: product.provenance,
+        prix: product.prix,
+        // urlImage: product.urlImage,
+        quantity: product.quantity
+    });
 
+    Product.updateOne({_id: product._id}, updateProduct, (error, product)=>{
+        if(error){
+            console.error(error);
+        }
+        console.log(product);
+        response.json(product);
+    })
 
  })
  app.post('/products', (request, response)=>{
-
-    let newProduct = request.body;
-    produits.push(newProduct);
-
-
+    let product = request.body;
+    let newProduct = new Product({
+        libelle: product.libelle,
+        categorie: product.categorie,
+        description: product.description,
+        provenance: product.provenance,
+        prix: product.prix,
+        // urlImage: product.urlImage,
+        quantity: product.quantity
+    });
+    newProduct.save((error, product)=>{
+        if(error){
+            return console.error(error);
+        }
+        console.log(product);
+        response.json(product);
+    });
 })
-
 
 app.listen(3000, ()=>{console.log("Listening on port 3000")});
