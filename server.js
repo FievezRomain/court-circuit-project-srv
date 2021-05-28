@@ -320,7 +320,7 @@ app.delete('/carts/:id', (request, response) =>{
                     cart.items = [];
                     cart.subTotal = 0;
                 } else{
-                    cart.items = cart.items.splice(indexFound, 1);
+                    cart.items.splice(indexFound, 1);
                     cart.subTotal = cart.items.map(item => item.price).reduce((acc, next) => acc + next);
                 }
                 Cart.updateOne({_id: cart._id}, cart, (error, cart)=>{
