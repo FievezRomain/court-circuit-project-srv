@@ -1,5 +1,6 @@
 const express = require('express');
 const session = require('express-session')
+const bcrypt = require("bcrypt");
 const app = express();
 var cors = require('cors');
 var bodyParser = require("body-parser");
@@ -31,34 +32,56 @@ app.use(session({secret:"CourtCircuitKey", cookie:{maxAge: 24*60*60*1000}}));
 
 //**************************Partie Auth***************************** */
 app.post('/login', (request, response) => {
-    User.findOne({email: request.body.email, password: request.body.password}, (error, user) => {
+    User.findOne({email: request.body.email}, (error, user) => {
         if (error) return response.status(401).json({msg:"Error"});
-        if(!user) return response.status(401).json({msg: "Mauvais email/password"});
-        request.session.userId = user._id;
-        return response.status(200).json({email: user.email, nom: user.nom, prenom: user.prenom, grade: user.grade});
+        if(!user) return response.status(401).json({msg: "Mauvais email"});
+        bcrypt.compare(request.body.password, user.password, function(error, isMatch) {
+            if (error) {
+                return response.status(401).json({msg: "error"});
+            } else if (!isMatch) {
+                return response.status(401).json({msg: "Mauvais password"});
+            } else {
+                request.session.userId = user._id;
+                return response.status(200).json({email: user.email, nom: user.nom, prenom: user.prenom, grade: user.grade});
+            }
+          })
     })
 })
 
 app.post('/register', (request, response) =>{
-    var newUser = new User({
-        email: request.body.email,
-        nom: request.body.nom,
-        prenom: request.body.prenom,
-        grade: "utilisateur",
-        password: request.body.password
-    })
-    User.countDocuments({email: newUser.email}, function(err, count) {
-        if(err) return response.status(401).json({msg:"Error"});
-        if(count>0){
-            return response.status(409).json({msg:"L'utilisateur existe déjà"});
-        }else{
-            newUser.save((error, user) =>{
-                if(error) return console.error(error);
-                request.session.userId = user._id;
-                return response.status(200).json({email: user.email, nom: user.nom, prenom: user.prenom, grade: user.grade});
+    var password = request.body.password;
+    bcrypt.genSalt(10, function (saltError, salt) {
+        if (saltError) {
+          return next(saltError)
+        } else {
+          bcrypt.hash(password, salt, function(hashError, hash) {
+            if (hashError) {
+              return next(hashError)
+            }
+            password = hash.toString();
+            var newUser = new User({
+                email: request.body.email,
+                nom: request.body.nom,
+                prenom: request.body.prenom,
+                grade: "utilisateur",
+                password: password
             })
+            User.countDocuments({email: newUser.email}, function(err, count) {
+                if(err) return response.status(401).json({msg:"Error"});
+                if(count>0){
+                    return response.status(409).json({msg:"L'utilisateur existe déjà"});
+                }else{
+                    newUser.save((error, user) =>{
+                        if(error) return console.error(error);
+                        request.session.userId = user._id;
+                        return response.status(200).json({email: user.email, nom: user.nom, prenom: user.prenom, grade: user.grade});
+                    })
+                }
+            })
+          })
         }
     })
+    
 })
 
 app.get('/logout', (request, response) =>{
@@ -108,23 +131,34 @@ app.get('/users/:id', (request, response) =>{
  }) 
  app.put('/users/:id', (request, response)=>{
     let user = request.body;
-    var updateUser = new User({
-        _id: user._id,
-        email: user.email,
-        nom: user.nom,
-        prenom: user.prenom,
-        grade: user.grade,
-        password: user.password
-    })
-
-    User.updateOne({_id: user._id}, updateUser, (error, user)=>{
-        if(error){
-            console.error(error);
+    bcrypt.genSalt(10, function (saltError, salt) {
+        if (saltError) {
+          return next(saltError)
+        } else {
+            bcrypt.hash(user.password, salt, function(hashError, hash) {
+                if (hashError) {
+                return next(hashError)
+                }
+                var password = hash.toString();
+                var updateUser = new User({
+                    _id: user._id,
+                    email: user.email,
+                    nom: user.nom,
+                    prenom: user.prenom,
+                    grade: user.grade,
+                    password: password
+                })
+            
+                User.updateOne({_id: user._id}, updateUser, (error, user)=>{
+                    if(error){
+                        console.error(error);
+                    }
+                    console.log(user);
+                    response.json(user);
+                })
+            })
         }
-        console.log(user);
-        response.json(user);
     })
-
  })
 
 //**************************Partie Produit***************************** */

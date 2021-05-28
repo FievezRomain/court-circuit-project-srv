@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const userSchema = mongoose.Schema({
+const productSchema = mongoose.Schema({
     libelle: {type:String, required: true},
     categorie:{type:String, required: true},
     description:{type:String, required: true},
@@ -8,4 +8,4 @@ const userSchema = mongoose.Schema({
     // urlImage:{type:String, required: true},
     quantity:{type:Number, required: true}
 });
-module.exports = mongoose.model("Product", userSchema);
+module.exports = mongoose.model("Product", productSchema);
